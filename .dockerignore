@@ -1,0 +1,7 @@
+# Не нужно в образ/репозиторий деплоя
+app/
+dist/
+server/node_modules/
+server/data/
+**/node_modules/
+*.log
