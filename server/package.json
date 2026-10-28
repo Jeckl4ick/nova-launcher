@@ -1,0 +1,17 @@
+{
+  "name": "nova-server",
+  "version": "1.0.0",
+  "description": "Nova Launcher backend API",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^2.0.2"
+  }
+}
