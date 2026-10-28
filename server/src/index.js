@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const express = require('express');
 const multer = require('multer');
 const { db, DATA_DIR } = require('./db');
-const { hashPassword, verifyPassword, issueToken, publicUser, requireAuth, requireAdmin } = require('./auth');
+const { hashPassword, verifyPassword, issueToken, verifyToken, publicUser, requireAuth, requireAdmin } = require('./auth');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -63,7 +63,35 @@ function setConfig(key, value) {
 }
 
 app.get('/api/config', (req, res) => {
-  res.json({ avatar_url: getConfig('avatar_url') });
+  res.json({
+    avatar_url: getConfig('avatar_url'),
+    maintenance: getConfig('maintenance') === '1',
+  });
+});
+
+// Включение/выключение режима «Тех. работы» (админом).
+app.post('/api/admin/config/maintenance', requireAdmin, (req, res) => {
+  const on = req.body && req.body.enabled ? '1' : '0';
+  setConfig('maintenance', on);
+  res.json({ maintenance: on === '1' });
+});
+
+// Режим «Тех. работы»: пока включён — все обычные запросы получают 503.
+// Админам проход открыт, чтобы могли выключить; авторизация/конфиг/health — доступны.
+app.use((req, res, next) => {
+  if (getConfig('maintenance') !== '1') return next();
+  const open = ['/api/health', '/api/config', '/api/auth/login', '/api/auth/register', '/api/auth/me'];
+  if (open.includes(req.path)) return next();
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (token) {
+    const payload = verifyToken(token);
+    if (payload) {
+      const user = db.prepare('SELECT role, banned FROM users WHERE id = ?').get(payload.uid);
+      if (user && !user.banned && user.role === 'admin') return next();
+    }
+  }
+  res.status(503).json({ error: 'Идут технические работы', maintenance: true });
 });
 
 app.post('/api/admin/config/avatar', requireAdmin, upload.single('avatar'), (req, res) => {
