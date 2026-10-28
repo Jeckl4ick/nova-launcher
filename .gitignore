@@ -1,0 +1,9 @@
+# Локальные зависимости и артефакты
+**/node_modules/
+app/dist/
+server/data/
+
+# Логи и системный мусор
+*.log
+Thumbs.db
+.DS_Store
