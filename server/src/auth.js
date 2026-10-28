@@ -92,6 +92,7 @@ module.exports = {
   hashPassword,
   verifyPassword,
   issueToken,
+  verifyToken,
   publicUser,
   requireAuth,
   requireAdmin,
